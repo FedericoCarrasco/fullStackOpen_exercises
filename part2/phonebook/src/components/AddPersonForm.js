@@ -1,6 +1,7 @@
 import { useState } from "react"
+import personsService from "../services/persons"
 
-const AddPersonForm = ({persons, personsSet}) => {
+const AddPersonForm = ({persons, setPersons}) => {
 
     const [newName, setNewName] = useState('')
     const [newNumber, setNewNumber] = useState('')
@@ -20,18 +21,45 @@ const AddPersonForm = ({persons, personsSet}) => {
             number: newNumber
         }
         if (nameAlreadyExist(personObject.name)) {
-            alert(`${personObject.name} is already added to phonebook`)
+
+            if (window.confirm(`${personObject.name} is already added to phonebook, replace the old number with the new one?`)) {
+                
+                if (numberAlreadyExist(personObject.number)) alert(`${personObject.number} is already in use`)
+                else {
+                    const id = getIdByPersonName(personObject.name)
+                    personsService.update(id, personObject)
+                        .then(response => {
+                            setPersons(persons.map(person => person.id !== id ? person : response.data))
+                        })
+                    //setPersons(persons.map(person => person.id !== id ? person : response.data))
+                }
+            }
+        }
+        else if (numberAlreadyExist(personObject.number)) {
+            alert(`${personObject.number} is already in use`)
         }
         else {
-            personsSet(persons.concat(personObject))
-            setNewName('')
-            setNewNumber('')
+            personsService.create(personObject)
+                .then(response => {
+                    setPersons(persons.concat(response.data))
+                    setNewName('')
+                    setNewNumber('')
+                })
         }   
     }
 
     const nameAlreadyExist = newPersonName => {
         const arr = persons.filter(person => person.name.toLowerCase() === newPersonName.toLowerCase())
         return arr.length > 0
+    }
+
+    const numberAlreadyExist = newPersonNumber => {
+        const arr = persons.filter(person => person.number === newPersonNumber)
+        return arr.length > 0
+    }
+
+    const getIdByPersonName = name => {
+        return persons.filter(person => person.name === name)[0].id
     }
 
     return (
