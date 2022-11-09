@@ -31,6 +31,10 @@ const AddPersonForm = ({persons, setPersons, setNotification}) => {
                         .then(response => {
                             setPersons(persons.map(person => person.id !== id ? person : response.data))
                         })
+                        .catch(response => {
+                            setNotification({status: 'error', content: `Information of ${personObject.name} has already been removed from server`})
+                            setTimeout(() => setNotification(null), 5000)
+                        })
                 }
             }
         }
