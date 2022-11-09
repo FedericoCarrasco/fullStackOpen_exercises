@@ -1,7 +1,7 @@
 import { useState } from "react"
 import personsService from "../services/persons"
 
-const AddPersonForm = ({persons, setPersons}) => {
+const AddPersonForm = ({persons, setPersons, setNotification}) => {
 
     const [newName, setNewName] = useState('')
     const [newNumber, setNewNumber] = useState('')
@@ -24,20 +24,17 @@ const AddPersonForm = ({persons, setPersons}) => {
 
             if (window.confirm(`${personObject.name} is already added to phonebook, replace the old number with the new one?`)) {
                 
-                if (numberAlreadyExist(personObject.number)) alert(`${personObject.number} is already in use`)
+                if (numberAlreadyExist(personObject.number)) numberAlreadyExistNotification(personObject.number)
                 else {
                     const id = getIdByPersonName(personObject.name)
                     personsService.update(id, personObject)
                         .then(response => {
                             setPersons(persons.map(person => person.id !== id ? person : response.data))
                         })
-                    //setPersons(persons.map(person => person.id !== id ? person : response.data))
                 }
             }
         }
-        else if (numberAlreadyExist(personObject.number)) {
-            alert(`${personObject.number} is already in use`)
-        }
+        else if (numberAlreadyExist(personObject.number)) numberAlreadyExistNotification(personObject.number)
         else {
             personsService.create(personObject)
                 .then(response => {
@@ -56,6 +53,11 @@ const AddPersonForm = ({persons, setPersons}) => {
     const numberAlreadyExist = newPersonNumber => {
         const arr = persons.filter(person => person.number === newPersonNumber)
         return arr.length > 0
+    }
+
+    const numberAlreadyExistNotification = number => {
+        setNotification({status: 'error', content: `The number: ${number} is already in use`})
+        setTimeout(() => setNotification(null), 5000)
     }
 
     const getIdByPersonName = name => {
